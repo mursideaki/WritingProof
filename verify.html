@@ -261,6 +261,21 @@
 <div class="footer">WritingProof — Cryptographic proof of human authorship</div>
 
 <script>
+  // ─── URL HASH PARAM ─────────────────────────────
+  let expectedHash = null;
+
+  window.onload = () => {
+    const params = new URLSearchParams(window.location.search);
+    const h = params.get('hash');
+    if (h) {
+      expectedHash = h;
+      const hint = document.createElement('p');
+      hint.style.cssText = 'margin-top:12px;font-size:12px;color:#38a169;font-weight:600;';
+      hint.textContent = `🔗 Hash loaded from QR: ${h.substring(0, 16)}…`;
+      document.getElementById('upload-area').appendChild(hint);
+    }
+  };
+
   // ─── DRAG & DROP ────────────────────────────────
   function onDragOver(e) {
     e.preventDefault();
@@ -316,16 +331,27 @@
     const timeStr = hrs > 0 ? `${hrs}h ${mn}m` : `${mn}m`;
     const avgSpeed = totalMinutes > 0 ? Math.round(totalTyped / totalMinutes) : 0;
 
+    // Hash karşılaştırma — QR'dan gelen hash ile JSON'daki eşleşiyor mu?
+    const hashMatch = expectedHash ? (data.lastHash === expectedHash) : null;
+    const fullyValid = isValid && (hashMatch === null || hashMatch === true);
+
     // Status
     const card = document.getElementById('status-card');
-    card.className = 'status-card ' + (isValid ? 'valid' : 'invalid');
-    document.getElementById('status-icon').textContent = isValid ? '✅' : '❌';
-    document.getElementById('status-title').textContent = isValid
-      ? 'Proof chain valid'
-      : 'Proof chain invalid';
-    document.getElementById('status-sub').textContent = isValid
-      ? 'This document\'s writing history has not been tampered with.'
-      : 'Records may have been altered. This proof cannot be trusted.';
+    card.className = 'status-card ' + (fullyValid ? 'valid' : 'invalid');
+    document.getElementById('status-icon').textContent = fullyValid ? '✅' : '❌';
+
+    if (!isValid) {
+      document.getElementById('status-title').textContent = 'Proof chain invalid';
+      document.getElementById('status-sub').textContent = 'Records may have been altered. This proof cannot be trusted.';
+    } else if (hashMatch === false) {
+      document.getElementById('status-title').textContent = 'Hash mismatch';
+      document.getElementById('status-sub').textContent = 'This JSON file does not match the QR code on the document. Wrong file or tampered data.';
+    } else {
+      document.getElementById('status-title').textContent = 'Proof chain valid';
+      document.getElementById('status-sub').textContent = hashMatch === true
+        ? 'Hash matches QR code. This document\'s writing history has not been tampered with.'
+        : 'This document\'s writing history has not been tampered with.';
+    }
 
     // Info
     document.getElementById('doc-title').textContent = data.docTitle || '—';
@@ -390,6 +416,9 @@
     document.getElementById('file-input').value = '';
   }
 </script>
+
+</body>
+</html>
 
 </body>
 </html>
