@@ -310,6 +310,7 @@
   }
 
   function renderResult(data) {
+    console.log('Last chain block:', data.proofChain?.[data.proofChain.length-1]?.data);
     const sessions = data.sessions || [];
     const chain = data.proofChain || [];
     const isValid = validateChain(chain);
