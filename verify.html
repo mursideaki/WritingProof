@@ -340,17 +340,35 @@
     card.className = 'status-card ' + (fullyValid ? 'valid' : 'invalid');
     document.getElementById('status-icon').textContent = fullyValid ? '✅' : '❌';
 
+    const verificationStatus = data.proofChain?.length > 0 
+      ? data.proofChain[data.proofChain.length - 1].data?.verificationStatus 
+      : null;
+    const untrackedChars = data.proofChain?.length > 0
+      ? data.proofChain[data.proofChain.length - 1].data?.untrackedChars || 0
+      : 0;
+
     if (!isValid) {
+      card.className = 'status-card invalid';
+      document.getElementById('status-icon').textContent = '❌';
       document.getElementById('status-title').textContent = 'Proof chain invalid';
-      document.getElementById('status-sub').textContent = 'Records may have been altered. This proof cannot be trusted.';
+      document.getElementById('status-sub').textContent = 'Records may have been altered.';
     } else if (hashMatch === false) {
+      card.className = 'status-card invalid';
+      document.getElementById('status-icon').textContent = '❌';
       document.getElementById('status-title').textContent = 'Hash mismatch';
-      document.getElementById('status-sub').textContent = 'This JSON file does not match the QR code on the document. Wrong file or tampered data.';
+      document.getElementById('status-sub').textContent = 'This JSON does not match the QR code on the document.';
+    } else if (verificationStatus === 'UNVERIFIED') {
+      card.className = 'status-card invalid';
+      document.getElementById('status-icon').textContent = '⚠️';
+      document.getElementById('status-title').textContent = 'Untracked content detected';
+      document.getElementById('status-sub').textContent = `${untrackedChars} characters were written while the add-in was closed and cannot be verified.`;
     } else {
-      document.getElementById('status-title').textContent = 'Proof chain valid';
+      card.className = 'status-card valid';
+      document.getElementById('status-icon').textContent = '✅';
+      document.getElementById('status-title').textContent = 'Fully verified';
       document.getElementById('status-sub').textContent = hashMatch === true
-        ? 'Hash matches QR code. This document\'s writing history has not been tampered with.'
-        : 'This document\'s writing history has not been tampered with.';
+        ? 'Hash matches QR. All content was tracked by WritingProof.'
+        : 'All content was tracked by WritingProof.';
     }
 
     // Info
